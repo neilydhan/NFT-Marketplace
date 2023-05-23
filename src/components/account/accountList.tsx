@@ -20,11 +20,11 @@ import { store } from '@/utils/store';
 import { reddio } from '@/utils/config';
 import Operate from '@/components/dialog/operate';
 import ERC721MDialog from '@/components/dialog/erc721m';
-import { ERC20Address, ERC721Address } from '@/utils/common';
+import { ERC20Address, ERC721Address, USDCAddress } from '@/utils/common';
 import type { BalancesV2Response } from '@reddio.com/js';
 import { fetchBalance } from '@wagmi/core';
 
-const l1Items = ['GoerliETH', 'ERC20', 'ERC721'];
+const l1Items = ['GoerliETH', 'ERC20', 'ERC721', 'USDC'];
 
 const AccountList = () => {
   const snap = useSnapshot(store);
@@ -32,6 +32,7 @@ const AccountList = () => {
     GoerliETH: '',
     ERC20: '',
     ERC721: '',
+    USDC:'',
     tokenIds: [],
   });
   const [l2Balance, setL2Balance] = useState<BalancesV2Response[]>([]);
@@ -101,15 +102,17 @@ const AccountList = () => {
       const address = await getEthAddress();
       if (!address) return;
       setAddress(address);
-      const [eth, erc20, erc721] = await Promise.all([
+      const [eth, erc20, erc721, usdc] = await Promise.all([
         getL1Eth(address),
         getErc20Balance(),
         getErc721Balance(ERC721Address),
+        getUsdcBalance(),
       ]);
       setL1Balance({
         GoerliETH: eth,
         ERC20: erc20,
         ERC721: erc721.length,
+        USDC: usdc,
         tokenIds: erc721,
       });
       setLoading((v) => ({
@@ -128,6 +131,10 @@ const AccountList = () => {
 
   const getErc20Balance = useCallback(async () => {
     return getContractBalance(ERC20Address);
+  }, []);
+
+  const getUsdcBalance = useCallback(async () => {
+    return getContractBalance(USDCAddress);
   }, []);
 
   const handleGetTestAsset = useCallback(async () => {

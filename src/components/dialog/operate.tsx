@@ -12,7 +12,7 @@ import styles from './index.less';
 import { store } from '@/utils/store';
 import { useCallback, useMemo, useState } from 'react';
 import { reddio } from '@/utils/config';
-import { ERC20Address, ERC721Address } from '@/utils/common';
+import { ERC20Address, ERC721Address, USDCAddress } from '@/utils/common';
 import type { SignTransferParams, BalancesV2Response } from '@reddio.com/js';
 
 const FormItem = Form.FormItem;
@@ -96,6 +96,7 @@ const Operate = (props: IOperateProps) => {
         { label: 'GoerliETH', value: 'GoerliETH' },
         { label: 'ERC20', value: 'ERC20' },
         { label: 'ERC721', value: 'ERC721' },
+        { label: 'USDC', value: 'USDC' },
       ];
     } else {
       return l2Balance.map((item) => ({
@@ -152,10 +153,35 @@ const Operate = (props: IOperateProps) => {
   const approve = useCallback(async () => {
     try {
       setLoading(true);
-      const tokenAddress =
-        selectType === 'ERC20' ? ERC20Address : ERC721Address;
+      let tokenAddress=ERC20Address;
+      switch(selectType) { 
+        case 'ERC20': { 
+           //statements; 
+           tokenAddress = ERC20Address;
+           break; 
+        } 
+        case 'ERC721': { 
+           //statements; 
+           tokenAddress = ERC721Address;
+           break; 
+        } 
+        case 'USDC': { 
+          //statements; 
+          tokenAddress = USDCAddress;
+          break; 
+       } 
+        default: { 
+           //statements; 
+           break; 
+        } 
+     } 
       let tx;
       if (selectType === 'ERC20') {
+        tx = await reddio.erc20.approve({
+          tokenAddress,
+          amount: form.getFieldValue?.('amount'),
+        });
+      } else if (selectType === 'USDC') {
         tx = await reddio.erc20.approve({
           tokenAddress,
           amount: form.getFieldValue?.('amount'),
@@ -195,11 +221,17 @@ const Operate = (props: IOperateProps) => {
             quantizedAmount,
             tokenAddress: ERC20Address,
           });
-        } else {
+        } else if (type === 'ERC721'){
           await reddio.apis.depositERC721({
             starkKey,
             tokenId: form.getFieldValue?.('tokenId'),
             tokenAddress: ERC721Address,
+          });
+        } else {
+          await reddio.apis.depositERC20({
+            starkKey,
+            quantizedAmount,
+            tokenAddress: USDCAddress,
           });
         }
         showNotification(
